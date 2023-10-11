@@ -157,7 +157,7 @@ def clack():
 def export_python():
     expense_list = read_db_or_init()
     print(repr(expense_list))
-
+#capsys - przeczytać dokumentację
 
 @clack.command
 @click.argument("csv_file")
@@ -193,8 +193,7 @@ def add(amount: float, description: str) -> None:
 
 
 if __name__ == "__main__":
-    expense_list = [Expense(1, 123.00, "Cherry"), Expense(2, 1000, "Garden swing")]
-    print_expenses(expense_list)
+    clack()
 
 
 # Napisz program, który ułatwi milionom Polaków śledzenie własnych wydatków oraz ich analizę. Program pozwala na łatwe dodawanie nowych wydatków i generowanie raportów. Aplikacja działa także pomiędzy uruchomieniami, przechowując wszystkie dane w pliku. Każdy wydatek ma id, opis oraz wielkość kwoty.
