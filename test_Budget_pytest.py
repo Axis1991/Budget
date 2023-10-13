@@ -93,4 +93,4 @@ def test_add():
         assert Expense(id=1,amount=123,description="Chicken") in expense_list
         mock_save_db.assert_called_once_with(expense_list)
 
-# Cały ten test niestety nie działa ani trochę... Chętnie dowiedziałbym się dlaczego ^^.
+# Cały ten test niestety nie działa ani trochę, w ogóle nie wczytuje danych. Chętnie dowiedziałbym się dlaczego ^^.
