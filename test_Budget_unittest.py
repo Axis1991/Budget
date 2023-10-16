@@ -279,30 +279,3 @@ class TestPrintExpenses(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-# class TestAddCsvToDb(unittest.TestCase):
-
-#     def setUp(self) -> None:
-#         return super().setUp()
-
-#     def tearDown(self) -> None:
-#         return super().tearDown()
-
-#     @patch('main.read_expenses', side_effect = read_expenses)
-#     @patch('main.read_db_or_init', side_effect = read_db_or_init)
-#     def test_add_csv_to_db(self, mock_read_exp, mock_read_db):
-#         csv_content = "amount,description\n60,Pendrive\n40,USB Cable"
-
-#         # Mock the open function to return the CSV content
-#         with patch('builtins.open', create=True) as mock_open:
-#             mock_open.return_value.__enter__.return_value = StringIO(csv_content)
-
-#             # Call the function
-#             expenses = add_csv_to_db("temp_expenses.csv")
-
-#             # Assert that expenses contains the expected Expense objects
-#             self.assertEqual(expenses, [
-#                 Expense(id=1, amount=60.0, description='Pendrive'),
-#                 Expense(id=2, amount=40.0, description='USB Cable')
-#             ])
