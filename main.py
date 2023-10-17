@@ -24,8 +24,11 @@ class Expense:
     def __post_init__(self):
         if float(self.amount) < 0:
             raise ValueError("Koszt nie może być ujemny")
+        if float(self.amount) > 10000000000000:
+            raise ValueError("Koszt powinien być mniejszy od 10,000,000,000,000")
         if not self.description:
             raise ValueError("Opis nie może być pusty")
+        
 
     def __eq__(self, other):
         return (
@@ -134,7 +137,12 @@ def strip_zeros(number: float) -> str:
 
 
 def print_expenses(expense_list: list[Expense]) -> None:
-    print(f"==ID==  ==Amount==  =BIG?=  =DESCRIPTION=")
+    extra_space = 0
+    for item in expense_list:
+        if item.amount >= 10000000:
+                extra_space_current = len(str(item.amount)) - 8
+                if extra_space_current > extra_space: extra_space = extra_space_current
+    print(f"==ID==  {(' ')*round(extra_space/2)}==Amount=={(' ')*round(extra_space/2)}  =BIG?=  =DESCRIPTION=")
     total = 0
     for item in expense_list:
         total += float(item.amount)
@@ -143,7 +151,7 @@ def print_expenses(expense_list: list[Expense]) -> None:
         else:
             big = " "
         print(
-            f"{item.id:^6}    {strip_zeros(item.amount):<8}   {big:^6}  {item.description:<20}"
+            f"{item.id:^6}    {strip_zeros(item.amount):<{8+extra_space}}   {big:^6}  {item.description:20}"
         )
     print("TOTAL:   ", f"{strip_zeros(total)}")
 

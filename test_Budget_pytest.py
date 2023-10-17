@@ -86,11 +86,12 @@ def test_add():
     test_description = "Chicken"
     expense_list = []
     runner = CliRunner()
-    with patch("main.read_db_or_init", new_callable=expense_list), patch(
+    with patch("main.read_db_or_init", return_value=expense_list), patch(
         "main.save_db") as mock_save_db:
         result = runner.invoke(add, [str(test_amount), test_description])
-        assert result.output == "Dodano"
+        print(result.exit_code)
+        assert result.output == "Dodano\n"
         assert Expense(id=1,amount=123,description="Chicken") in expense_list
         mock_save_db.assert_called_once_with(expense_list)
 
-# Cały ten test niestety nie działa ani trochę, w ogóle nie wczytuje danych. Chętnie dowiedziałbym się dlaczego ^^. 
+# new_callable - funkcja zmockowana
