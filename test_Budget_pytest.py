@@ -95,3 +95,5 @@ def test_add():
         mock_save_db.assert_called_once_with(expense_list)
 
 # new_callable - funkcja zmockowana
+
+#edit for code review
