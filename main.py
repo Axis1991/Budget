@@ -1,8 +1,9 @@
 """
 Usage: M07L12_projekt.py <add (amount, description)> <report> <import-csv(csv path)> <export-python>
 
-Takes arguments to create or add to database budget.db and calculate the sum of expenses. Possible to load expenses from csv file.
-<export-python> prints budget.db content in the form of a list to be possibly reused (hi there YAGNI ;) ).
+Takes arguments to create or add to database budget.db and calculate the sum of expenses. 
+It is possible to load expenses from csv file.
+<export-python> prints budget.db content in the form of a list to be possibly extended).
 """
 
 import csv
@@ -43,7 +44,7 @@ class Expense:
 
 @dataclass
 class CSV_import:
-    amount: float
+    amount: float|str
     description: str
 
     def __post_init__(self):
@@ -67,6 +68,7 @@ class CSV_import:
 
 
 def find_next_id(expense_list: list[Expense]):
+    """Used to help organize data in a database"""
     ids = {item.id for item in expense_list}
     counter = 1
     while counter in ids:
@@ -105,6 +107,7 @@ def create_Expense_item_from_dict(row: dict[str, str]) -> [CSV_import]:
 
 
 def read_expenses(filename: str, expense_list) -> list[Expense]:
+    """reads expenses from a file and returns them as Expense class list of items"""
     with open(filename, encoding="utf-8") as stream:
         reader = csv.DictReader(stream)
         try:
@@ -133,6 +136,7 @@ def add_csv_to_db(csv_file):
 
 
 def strip_zeros(number: float) -> str:
+    """Removes trailing zeroes to improve user experience"""
     return str(number).rstrip("0").rstrip(".") if "." in str(number) else str(number)
 
 
@@ -140,8 +144,8 @@ def print_expenses(expense_list: list[Expense]) -> None:
     extra_space = 0
     for item in expense_list:
         if item.amount >= 10000000:
-                extra_space_current = len(str(item.amount)) - 8
-                if extra_space_current > extra_space: extra_space = extra_space_current
+            extra_space_current = len(str(item.amount)) - 8
+            if extra_space_current > extra_space: extra_space = extra_space_current
     print(f"==ID==  {(' ')*round(extra_space/2)}==Amount=={(' ')*round(extra_space/2)}  =BIG?=  =DESCRIPTION=")
     total = 0
     for item in expense_list:
@@ -165,7 +169,6 @@ def clack():
 def export_python():
     expense_list = read_db_or_init()
     print(repr(expense_list))
-#capsys - przeczytać dokumentację
 
 @clack.command
 @click.argument("csv_file")
@@ -202,3 +205,4 @@ def add(amount: float, description: str) -> None:
 
 if __name__ == "__main__":
     clack()
+    

@@ -1,33 +1,31 @@
-from main import (
-    find_next_id,
-    read_db_or_init,
-    save_db,
-    add_expense,
-    create_Expense_item_from_dict,
-    read_expenses,
-    print_expenses,
-    add_csv_to_db,
-    strip_zeros,
-    import_csv,
-    Expense,
-    CSV_import,
-    DB_FILENAME,
-)
-from dataclasses import dataclass
-import pickle, csv
-import unittest
-from unittest.mock import patch, mock_open
+"""Unittest module to test a few basic functionalities"""
 from io import StringIO
 import sys
+import unittest
+from unittest.mock import patch, mock_open
+
+from main import (
+    add_expense,
+    create_Expense_item_from_dict,
+    find_next_id,
+    print_expenses,
+    read_db_or_init,
+    read_expenses,
+    strip_zeros,
+    CSV_import,
+    Expense,
+    
+)
+
+    # def setUp(self) -> None:
+    #     return super().setUp()
+
+    # def tearDown(self) -> None:
+    #     return super().tearDown()
 
 
 class TestExpenseClass(unittest.TestCase):
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
+    """Verifies if invalid data is handled correctly by the class"""
     def test_negative_amount(self):
         with self.assertRaises(ValueError) as message:
             expense = Expense(id=1, amount=-1, description="Negative Expense")
@@ -43,16 +41,11 @@ class TestExpenseClass(unittest.TestCase):
 
 
 class TestCsvImportClass(unittest.TestCase):
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
+    """Verifies if data is handled correctly by CsvImport class """
     def test_correct_input(self):
         instance = CSV_import(amount="100.50", description="Valid Expense")
         self.assertIsInstance(instance, CSV_import)
-
+        
     def test_negative_amount(self):
         with self.assertRaises(ValueError) as message:
             expense = CSV_import(amount="-1", description="Negative Expense")
@@ -75,12 +68,7 @@ class TestCsvImportClass(unittest.TestCase):
 
 
 class TestFindID(unittest.TestCase):
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
+    """ Verifies if id is correctly selected in a number of situations"""
     def test_find_next_id_empty(self):
         empty = []
         self.assertEqual(find_next_id(empty), 1)
@@ -101,12 +89,7 @@ class TestFindID(unittest.TestCase):
 
 
 class TestReadDB(unittest.TestCase):
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
+    """Tests the expected return value for database - existing or not"""
     @patch("pickle.load")
     @patch("builtins.open", new_callable=mock_open)
     def test_read_db_or_init_with_db(self, mock_file, mock_load):
@@ -123,12 +106,7 @@ class TestReadDB(unittest.TestCase):
 
 
 class TestAddExpense(unittest.TestCase):
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
+    """Tests if expenses are correctly added the list for single and multiple items"""
     def test_add_expense_single(self):
         expense_list = []
         add_expense(expense_list, amount=60, description="Pendrive")
@@ -150,12 +128,8 @@ class TestAddExpense(unittest.TestCase):
 
 
 class TestCreateExpenseItemFromDict(unittest.TestCase):
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
+    """ Verifies if items are correctly interpreted from a dictionary and if 
+    incorrect ones are handled correctly"""
     def test_valid_input(self):
         row = {"amount": "60", "description": "Pendrive"}
         expense = create_Expense_item_from_dict(row)
@@ -190,15 +164,8 @@ class TestCreateExpenseItemFromDict(unittest.TestCase):
 
 
 class TestReadExpenses(unittest.TestCase):
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
-    @patch(
-        "main.create_Expense_item_from_dict", side_effect=create_Expense_item_from_dict
-    )
+    """ Tests reading data from db for easy path and invalid entries"""
+    @patch("main.create_Expense_item_from_dict", side_effect=create_Expense_item_from_dict)
     @patch("main.find_next_id", side_effect=find_next_id)
     @patch("builtins.open", create=True)
     def test_valid_input(self, mock_open, mock_create_expense, mock_find_id):
@@ -216,9 +183,7 @@ class TestReadExpenses(unittest.TestCase):
         self.assertEqual(expenses[0].amount, 60)
         self.assertEqual(expenses[0].description, "Pendrive")
 
-    @patch(
-        "main.create_Expense_item_from_dict", side_effect=create_Expense_item_from_dict
-    )
+    @patch("main.create_Expense_item_from_dict", side_effect=create_Expense_item_from_dict)
     @patch("main.find_next_id", side_effect=find_next_id)
     @patch("builtins.open", create=True)
     def test_invalid_input(self, mock_open, mock_create_expense, mock_find_id):
@@ -236,12 +201,7 @@ class TestReadExpenses(unittest.TestCase):
 
 
 class TestStripZeroes(unittest.TestCase):
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
+    """ Tests the correct removal of trailing zeroes"""
     def test_number_following_zeroes(self):
         got = strip_zeros(34.00)
         expected = "34"
@@ -254,12 +214,7 @@ class TestStripZeroes(unittest.TestCase):
 
 
 class TestPrintExpenses(unittest.TestCase):
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
+    """ Tests the correct presentation of results to the user"""
     def test_print_expenses(self):
         expense_list = [Expense(1, 123.00, "Cherry"), Expense(2, 1000, "Garden swing")]
 
@@ -279,5 +234,3 @@ class TestPrintExpenses(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-# edit for code review
