@@ -74,18 +74,18 @@ class TestFindID(unittest.TestCase):
         self.assertEqual(find_next_id(empty), 1)
 
     def test_find_next_easy_path(self):
-        someobject = [
+        expenses_data = [
             Expense(id=1, amount=234, description="Zabawki"),
             Expense(id=2, amount=334, description="Fish"),
         ]
-        self.assertEqual(find_next_id(someobject), 3)
+        self.assertEqual(find_next_id(expenses_data), 3)
 
     def test_find_next_id_missing_number(self):
-        someobject = [
+        expenses_data = [
             Expense(id=1, amount=234, description="Zabawki"),
             Expense(id=3, amount=76.23, description="Yt premium"),
         ]
-        self.assertEqual(find_next_id(someobject), 2)
+        self.assertEqual(find_next_id(expenses_data), 2)
 
 
 class TestReadDB(unittest.TestCase):
