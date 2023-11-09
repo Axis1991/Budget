@@ -169,9 +169,9 @@ class TestReadExpenses(unittest.TestCase):
     @patch("main.find_next_id", side_effect=find_next_id)
     @patch("builtins.open", create=True)
     def test_valid_input(self, mock_open, mock_create_expense, mock_find_id):
-        mock_open.return_value.__enter__.return_value = StringIO(
-            "amount,description\n60,Pendrive\n40,USB Cable"
-        )
+        mock_open.return_value.__enter__.return_value = [
+            "amount,description","60,Pendrive","40,USB Cable"]
+        
 
         expense_list = []
 
@@ -187,9 +187,7 @@ class TestReadExpenses(unittest.TestCase):
     @patch("main.find_next_id", side_effect=find_next_id)
     @patch("builtins.open", create=True)
     def test_invalid_input(self, mock_open, mock_create_expense, mock_find_id):
-        mock_open.return_value.__enter__.return_value = StringIO(
-            "amount,description\nWrong data"
-        )
+        mock_open.return_value.__enter__.return_value = ["amount,description", "Wrong data"]
 
         expense_list = []
 

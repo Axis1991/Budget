@@ -76,7 +76,7 @@ def find_next_id(expense_list: list[Expense]):
     return counter
 
 
-def read_db_or_init() -> list[Expense]:
+def read_db_or_init(filename=DB_FILENAME) -> list[Expense]:
     try:
         with open(DB_FILENAME, "rb") as stream:
             expense_list = pickle.load(stream)
@@ -85,7 +85,7 @@ def read_db_or_init() -> list[Expense]:
     return expense_list
 
 
-def save_db(expense_list: list[Expense], overwrite: bool = True) -> None:
+def save_db(expense_list: list[Expense], filename=DB_FILENAME, overwrite: bool = True) -> None:
     mode = "wb" if overwrite else "xb"
     with open(DB_FILENAME, mode) as stream:
         pickle.dump(expense_list, stream)
@@ -106,7 +106,7 @@ def create_Expense_item_from_dict(row: dict[str, str]) -> [CSV_import]:
         sys.exit(1)
 
 
-def read_expenses(filename: str, expense_list) -> list[Expense]:
+def read_expenses(expense_list, filename: str=DB_FILENAME) -> list[Expense]:
     """reads expenses from a file and returns them as Expense class list of items"""
     with open(filename, encoding="utf-8") as stream:
         reader = csv.DictReader(stream)
@@ -180,28 +180,28 @@ def import_csv(csv_file):
 
 @clack.command()
 def report() -> None:
-    expenses = read_db_or_init()
+    expenses = read_db_or_init(filename=DB_FILENAME)
     print_expenses(expenses)
 
 
 @clack.command()
 @click.argument("amount")
 @click.argument("description")
-def add(amount: float, description: str) -> None:
+def add(amount: float, description: str, filename=DB_FILENAME) -> None:
     try:
         amount = float(amount.replace(",", "."))
     except ValueError:
         print("Błąd - Koszt musi być liczbą")
         sys.exit(1)
-    expense_list = read_db_or_init()
+    expense_list = read_db_or_init(filename)
     try:
         add_expense(expense_list, amount, description)
     except ValueError as e:
         print(f"Błąd - {e.args[0]}")
         sys.exit(1)
-    save_db(expense_list)
+    save_db(expense_list, filename=DB_FILENAME)
     print("Dodano")
-
+   
 
 if __name__ == "__main__":
     clack()

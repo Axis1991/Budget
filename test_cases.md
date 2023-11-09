@@ -27,7 +27,7 @@ Expected result:
 .<br>
 .<br>
 
-### Pytests
+### Functional tests
 ---
 
 #### **TC-05**

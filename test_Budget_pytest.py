@@ -1,5 +1,6 @@
 """ Pytest document testing a few basic functionalities"""
 
+import logging
 import os
 import tempfile
 from unittest.mock import patch
@@ -7,9 +8,17 @@ from unittest.mock import patch
 from main import (
     Expense,
     add,
+    add_csv_to_db,
+    add_expense,
+    clack,
     export_python,
+    find_next_id,
     import_csv,
+    print_expenses,
+    read_db_or_init,
     report,
+    save_db,
+    DB_FILENAME
 )
 
 from click.testing import CliRunner
@@ -19,8 +28,6 @@ MOCK_OUTPUT_2_ITEMS = [
         Expense(id=1, amount=34.0, description="Hit Box"),
         Expense(id=2, amount=453.0, description="Crazy curry"),
     ]
-
-# read_db_or_init, find_next_id, add_csv_to_db, print_expenses, add_expense, save_db, - potentially to be tested
 
 @pytest.fixture
 def runner():
@@ -38,6 +45,7 @@ def test_export_python(runner):
 def test_import_csv(runner):
     """ Test to check if csv file is imported correctly and
      if there is appropriate interaction with database"""
+
     with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".csv") as temp_csv:
         temp_csv.write("amount,description\n34,Hit Box\n453,Crazy curry\n")
 
@@ -70,10 +78,29 @@ def test_add(runner):
     test_amount = 123
     test_description = "Chicken"
     expense_list = []
+
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
     with patch("main.read_db_or_init", return_value=expense_list), patch(
         "main.save_db") as mock_save_db:
         result = runner.invoke(add, [str(test_amount), test_description])
-        print(result.exit_code)
+        logger.info(f"Exit code: {result.exit_code}")
         assert result.output == "Dodano\n"
         assert Expense(id=1,amount=123,description="Chicken") in expense_list
-        mock_save_db.assert_called_once_with(expense_list)
+        mock_save_db.assert_called_once_with(expense_list, filename="budget.db")
+
+
+################################################################################
+                          # Integration tests
+################################################################################
+
+
+def test_add_and_report(runner):
+    test_amount = 123
+    test_description = "Chicken"
+    result = runner.invoke(clack, ["add", test_amount, test_description, "--filename", "test_budget.db"])
+    assert result.output == "Dodano\n"
+    cli_report = runner.invoke(report)
+    printed_output = cli_report.output
+    assert "1" and "123" and "Chicken" in printed_output
