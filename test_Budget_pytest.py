@@ -96,10 +96,21 @@ def test_add(runner):
 ################################################################################
 
 
-def test_add_and_report(runner):
+# def test_add_and_report(runner):
+#     test_amount = 123
+#     test_description = "Chicken"
+#     result = runner.invoke(clack, ["add", test_amount, test_description, "--filename", "test_budget.db"])
+#     assert result.output == "Dodano\n"
+#     cli_report = runner.invoke(report)
+#     printed_output = cli_report.output
+#     assert "1" and "123" and "Chicken" in printed_output
+
+
+def test_add_int(runner):
     test_amount = 123
     test_description = "Chicken"
-    result = runner.invoke(clack, ["add", test_amount, test_description, "--filename", "test_budget.db"])
+    result = runner.invoke(add, [str(test_amount), test_description])
+    print(result.stderr)
     assert result.output == "Dodano\n"
     cli_report = runner.invoke(report)
     printed_output = cli_report.output

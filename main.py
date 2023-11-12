@@ -8,10 +8,12 @@ It is possible to load expenses from csv file.
 
 import csv
 from dataclasses import dataclass
+import os
 import pickle
 import sys
 
 import click
+from click.testing import CliRunner
 
 DB_FILENAME = "budget.db"
 
@@ -68,7 +70,12 @@ class CSV_import:
 
 
 def find_next_id(expense_list: list[Expense]):
-    """Used to help organize data in a database"""
+    """Used to help organize data in a database - 
+    finds first available integer id in a list. 
+    Example:
+    >>> expenses = [Expense(id=1, ...), Expense(id=2, ...)]
+    >>> find_next_id(expenses)
+    3 """
     ids = {item.id for item in expense_list}
     counter = 1
     while counter in ids:
@@ -77,6 +84,7 @@ def find_next_id(expense_list: list[Expense]):
 
 
 def read_db_or_init(filename=DB_FILENAME) -> list[Expense]:
+    "Loads data from a database and returns empty list if database is not found."
     try:
         with open(DB_FILENAME, "rb") as stream:
             expense_list = pickle.load(stream)
@@ -107,7 +115,7 @@ def create_Expense_item_from_dict(row: dict[str, str]) -> [CSV_import]:
 
 
 def read_expenses(expense_list, filename: str=DB_FILENAME) -> list[Expense]:
-    """reads expenses from a file and returns them as Expense class list of items"""
+    """Reads expenses from a file and returns them as Expense class list of items"""
     with open(filename, encoding="utf-8") as stream:
         reader = csv.DictReader(stream)
         try:
@@ -141,6 +149,8 @@ def strip_zeros(number: float) -> str:
 
 
 def print_expenses(expense_list: list[Expense]) -> None:
+    """ Prints expenses with appropriate labels 
+    taking into account large numbers in spacing relevant columns."""
     extra_space = 0
     for item in expense_list:
         if item.amount >= 10000000:
@@ -188,21 +198,38 @@ def report() -> None:
 @click.argument("amount")
 @click.argument("description")
 def add(amount: float, description: str, filename=DB_FILENAME) -> None:
+    print("Checkpoint 1")
     try:
         amount = float(amount.replace(",", "."))
     except ValueError:
         print("Błąd - Koszt musi być liczbą")
         sys.exit(1)
+    print("Checkpoint 2")
     expense_list = read_db_or_init(filename)
+    print("Checkpoint 3")
     try:
         add_expense(expense_list, amount, description)
     except ValueError as e:
         print(f"Błąd - {e.args[0]}")
         sys.exit(1)
+    print("Checkpoint 4")
     save_db(expense_list, filename=DB_FILENAME)
     print("Dodano")
    
+def test_add_int():
+        print(os.getcwd())
+        runner = CliRunner()
+        test_amount = 123
+        test_description = "Chicken"
+        result = runner.invoke(add, [str(test_amount), test_description])
+        assert result.output == "Dodano\n" #print(result.output) 
+        cli_report = runner.invoke(report)
+        printed_output = cli_report.output
+        # if "1" and "123" and "Chicken" in printed_output:
+        #     print("true")
+        assert "1" and "123" and "Chicken" in printed_output
 
 if __name__ == "__main__":
-    clack()
+    test_add_int()
+   
     
