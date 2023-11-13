@@ -8,6 +8,7 @@ It is possible to load expenses from csv file.
 
 import csv
 from dataclasses import dataclass
+import json
 import os
 import pickle
 import sys
@@ -15,7 +16,7 @@ import sys
 import click
 from click.testing import CliRunner
 
-DB_FILENAME = "budget.db"
+DB_FILENAME = "budget.json"
 
 
 @dataclass
@@ -87,16 +88,21 @@ def read_db_or_init(filename=DB_FILENAME) -> list[Expense]:
     "Loads data from a database and returns empty list if database is not found."
     try:
         with open(DB_FILENAME, "rb") as stream:
-            expense_list = pickle.load(stream)
+            expense_list_data = json.load(stream)
+            expense_list = [Expense(item["id"], float(item["amount"]), item["description"])
+                for item in expense_list_data]
     except FileNotFoundError:
         expense_list = []
     return expense_list
 
 
 def save_db(expense_list: list[Expense], filename=DB_FILENAME, overwrite: bool = True) -> None:
-    mode = "wb" if overwrite else "xb"
-    with open(DB_FILENAME, mode) as stream:
-        pickle.dump(expense_list, stream)
+    mode = "w" if overwrite else "x"
+    expense_list_data = [
+        {"id": item.id, "amount": item.amount, "description": item.description}
+        for item in expense_list]
+    with open(filename, mode, encoding="utf-8") as stream:
+        json.dump(expense_list_data, stream, indent=2)
 
 
 def add_expense(expense_list: list[Expense], amount: float, description: str) -> None:
@@ -108,15 +114,15 @@ def add_expense(expense_list: list[Expense], amount: float, description: str) ->
 
 def create_Expense_item_from_dict(row: dict[str, str]) -> [CSV_import]:
     try:
-        return CSV_import(description=row["description"], amount=(row["amount"]))
+        return CSV_import(description=row["description"].lstrip(), amount=(row["amount"]))
     except KeyError:
         print("Błąd pliku - akceptowalne pliki z kluczami 'amount' oraz 'description'")
         sys.exit(1)
 
 
-def read_expenses(expense_list, filename: str=DB_FILENAME) -> list[Expense]:
+def read_expenses(csv_file: str, expense_list: list[Expense]) -> list[Expense]:
     """Reads expenses from a file and returns them as Expense class list of items"""
-    with open(filename, encoding="utf-8") as stream:
+    with open(csv_file, encoding="utf-8") as stream:
         reader = csv.DictReader(stream)
         try:
             expenses_no_id = [create_Expense_item_from_dict(row) for row in reader]
@@ -140,6 +146,7 @@ def add_csv_to_db(csv_file):
     expense_list = read_db_or_init()
     expenses_csv = read_expenses(csv_file, expense_list)
     [expense_list.append(each) for each in expenses_csv]
+    save_db(expense_list)
     return expense_list
 
 
@@ -189,8 +196,8 @@ def import_csv(csv_file):
 
 
 @clack.command()
-def report() -> None:
-    expenses = read_db_or_init(filename=DB_FILENAME)
+def report(filename=DB_FILENAME) -> None:
+    expenses = read_db_or_init(filename)
     print_expenses(expenses)
 
 
@@ -198,38 +205,23 @@ def report() -> None:
 @click.argument("amount")
 @click.argument("description")
 def add(amount: float, description: str, filename=DB_FILENAME) -> None:
-    print("Checkpoint 1")
+
     try:
         amount = float(amount.replace(",", "."))
     except ValueError:
         print("Błąd - Koszt musi być liczbą")
         sys.exit(1)
-    print("Checkpoint 2")
     expense_list = read_db_or_init(filename)
-    print("Checkpoint 3")
     try:
         add_expense(expense_list, amount, description)
     except ValueError as e:
         print(f"Błąd - {e.args[0]}")
         sys.exit(1)
-    print("Checkpoint 4")
     save_db(expense_list, filename=DB_FILENAME)
     print("Dodano")
    
-def test_add_int():
-        print(os.getcwd())
-        runner = CliRunner()
-        test_amount = 123
-        test_description = "Chicken"
-        result = runner.invoke(add, [str(test_amount), test_description])
-        assert result.output == "Dodano\n" #print(result.output) 
-        cli_report = runner.invoke(report)
-        printed_output = cli_report.output
-        # if "1" and "123" and "Chicken" in printed_output:
-        #     print("true")
-        assert "1" and "123" and "Chicken" in printed_output
 
 if __name__ == "__main__":
-    test_add_int()
-   
+    # test_add_int()
+    clack()
     

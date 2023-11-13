@@ -3,6 +3,7 @@
 import logging
 import os
 import tempfile
+import time
 from unittest.mock import patch
 
 from main import (
@@ -29,9 +30,30 @@ MOCK_OUTPUT_2_ITEMS = [
         Expense(id=2, amount=453.0, description="Crazy curry"),
     ]
 
+LIST_OF_ITEMS = [(987, "Chicken"),(456, "Bananas"),(789, "Pizza")]
+
 @pytest.fixture
 def runner():
    return CliRunner() 
+
+
+@pytest.fixture
+def temp_db_file(tmp_path):
+    temp_file = tmp_path / "temp.json"
+    return temp_file
+
+@pytest.fixture
+def setup_temp_db(temp_db_file):
+    expense_list = []
+    save_db(expense_list, filename=temp_db_file, overwrite=True)
+    return expense_list
+
+@pytest.fixture
+def teardown_temp_db(temp_db_file):
+    if temp_db_file.exists():
+        temp_db_file.unlink()
+
+
 
 def test_export_python(runner):
     """ Test for returning correct repr string"""
@@ -75,8 +97,7 @@ def test_report(runner):
 def test_add(runner):
     """ Test verifying that add function correctly adds element to a class
       and then to the list of items in the database"""
-    test_amount = 123
-    test_description = "Chicken"
+
     expense_list = []
 
     logging.basicConfig(level=logging.INFO)
@@ -84,34 +105,42 @@ def test_add(runner):
 
     with patch("main.read_db_or_init", return_value=expense_list), patch(
         "main.save_db") as mock_save_db:
-        result = runner.invoke(add, [str(test_amount), test_description])
-        logger.info(f"Exit code: {result.exit_code}")
+        for amount, description in LIST_OF_ITEMS:
+            arguments = [str(amount), description]
+            result = runner.invoke(add, arguments)
+        logger.info(f"Exit code: {result.exit_code}") # Po co to jest?
         assert result.output == "Dodano\n"
-        assert Expense(id=1,amount=123,description="Chicken") in expense_list
-        mock_save_db.assert_called_once_with(expense_list, filename="budget.db")
+        assert Expense(id=1,amount=987,description="Chicken") in expense_list
+        assert mock_save_db.call_count == 3
+        mock_save_db.assert_called_with(expense_list, filename="budget.json")
 
 
 ################################################################################
                           # Integration tests
 ################################################################################
 
+def test_add_and_report(runner, setup_temp_db, teardown_temp_db):
+    temp_db_file = setup_temp_db
+    try:
+        global DB_FILENAME
+        DB_FILENAME = temp_db_file
+        for amount, description in LIST_OF_ITEMS:
+            arguments = [str(amount), description]
+            result = runner.invoke(add, arguments)
+        assert result.output == "Dodano\n"
 
-# def test_add_and_report(runner):
-#     test_amount = 123
-#     test_description = "Chicken"
-#     result = runner.invoke(clack, ["add", test_amount, test_description, "--filename", "test_budget.db"])
-#     assert result.output == "Dodano\n"
-#     cli_report = runner.invoke(report)
-#     printed_output = cli_report.output
-#     assert "1" and "123" and "Chicken" in printed_output
+        # with open(DB_FILENAME, 'r') as file:
+        #     file_contents = file.read()
+        #     assert "1" and "2" and "3" in file_contents
+        #     assert "987" and "456" and "789" in file_contents
+        #     assert "Chicken" and "Bananas" and "Pizza" in file_contents
 
+        cli_report = runner.invoke(report)
+        printed_output = cli_report.output
+        assert "1" and "2" and "3" in printed_output
+        assert "987" and "456" and "789" in printed_output
+        assert "Chicken" and "Bananas" and "Pizza" in printed_output
 
-def test_add_int(runner):
-    test_amount = 123
-    test_description = "Chicken"
-    result = runner.invoke(add, [str(test_amount), test_description])
-    print(result.stderr)
-    assert result.output == "Dodano\n"
-    cli_report = runner.invoke(report)
-    printed_output = cli_report.output
-    assert "1" and "123" and "Chicken" in printed_output
+    finally:
+        teardown_temp_db
+        DB_FILENAME = "budget.json"
