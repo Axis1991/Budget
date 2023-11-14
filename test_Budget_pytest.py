@@ -1,5 +1,6 @@
 """ Pytest document testing a few basic functionalities"""
 
+import json
 import logging
 import os
 import tempfile
@@ -17,6 +18,7 @@ from main import (
     import_csv,
     print_expenses,
     read_db_or_init,
+    read_expenses,
     report,
     save_db,
     DB_FILENAME
@@ -30,28 +32,34 @@ MOCK_OUTPUT_2_ITEMS = [
         Expense(id=2, amount=453.0, description="Crazy curry"),
     ]
 
-LIST_OF_ITEMS = [(987, "Chicken"),(456, "Bananas"),(789, "Pizza")]
+LIST_OF_ITEMS = [(987,"Chicken"),(456,"Bananas"),(789,"Pizza")]
+
 
 @pytest.fixture
 def runner():
    return CliRunner() 
 
+@pytest.fixture
+def use_temp_csv():
+    filename_csv = "temp.csv"
+    with open(filename_csv, "w") as file:
+        file.write('amount,description\n150,Test CSV 1\n300,Test CSV 2\n')  
+    yield filename_csv
+    os.remove(filename_csv)
+
 
 @pytest.fixture
-def temp_db_file(tmp_path):
-    temp_file = tmp_path / "temp.json"
-    return temp_file
+def use_temp_db():
+    filename_db = "test_db.json"
+    with open(filename_db, "w") as file:
+        file.write("[]")  
+    yield filename_db
+    os.remove(filename_db)
 
-@pytest.fixture
-def setup_temp_db(temp_db_file):
-    expense_list = []
-    save_db(expense_list, filename=temp_db_file, overwrite=True)
-    return expense_list
-
-@pytest.fixture
-def teardown_temp_db(temp_db_file):
-    if temp_db_file.exists():
-        temp_db_file.unlink()
+# @pytest.fixture
+# def teardown_temp_db():
+#     yield
+#     os.remove("test_db.json")
 
 
 
@@ -67,18 +75,13 @@ def test_export_python(runner):
 def test_import_csv(runner):
     """ Test to check if csv file is imported correctly and
      if there is appropriate interaction with database"""
+    with runner.isolated_filesystem():
+        with open('test.csv', 'w') as file:
+            file.write('amount,description\n50,Test 1\n75,Test 2\n')
 
-    with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".csv") as temp_csv:
-        temp_csv.write("amount,description\n34,Hit Box\n453,Crazy curry\n")
-
-    with patch("main.add_csv_to_db", return_value=MOCK_OUTPUT_2_ITEMS), patch(
-        "main.save_db"
-    ) as mock_save_db:
-        result = runner.invoke(import_csv, [temp_csv.name])
-        mock_save_db.assert_called_once_with(MOCK_OUTPUT_2_ITEMS)
-        printed_output = result.output.strip()
-        assert printed_output == "Pomyślnie zaimportowano"
-    os.remove(temp_csv.name)
+        result = runner.invoke(import_csv, ['test.csv'])
+        assert result.exit_code == 0  
+        assert 'Pomyślnie zaimportowano' in result.output
 
 
 def test_report(runner):
@@ -119,28 +122,42 @@ def test_add(runner):
                           # Integration tests
 ################################################################################
 
-def test_add_and_report(runner, setup_temp_db, teardown_temp_db):
-    temp_db_file = setup_temp_db
-    try:
-        global DB_FILENAME
-        DB_FILENAME = temp_db_file
-        for amount, description in LIST_OF_ITEMS:
-            arguments = [str(amount), description]
-            result = runner.invoke(add, arguments)
-        assert result.output == "Dodano\n"
+def test_add_and_report(runner, use_temp_db):
+    temp_db = use_temp_db
+    for amount, description in LIST_OF_ITEMS:
+        result = runner.invoke(add, [str(amount), description, f"--filename={temp_db}"])
+    assert result.output == "Dodano\n"
 
-        # with open(DB_FILENAME, 'r') as file:
-        #     file_contents = file.read()
-        #     assert "1" and "2" and "3" in file_contents
-        #     assert "987" and "456" and "789" in file_contents
-        #     assert "Chicken" and "Bananas" and "Pizza" in file_contents
+    cli_report = runner.invoke(report, ["--filename", temp_db])
+    printed_output = cli_report.output
+    assert "1" and "2" and "3" in printed_output
+    assert "987" and "456" and "789" in printed_output
+    assert "Chicken" and "Bananas" and "Pizza" in printed_output
 
-        cli_report = runner.invoke(report)
-        printed_output = cli_report.output
-        assert "1" and "2" and "3" in printed_output
-        assert "987" and "456" and "789" in printed_output
-        assert "Chicken" and "Bananas" and "Pizza" in printed_output
 
-    finally:
-        teardown_temp_db
-        DB_FILENAME = "budget.json"
+def test_add_import_csv_and_report(runner, use_temp_db, use_temp_csv):
+    temp_db = use_temp_db
+    temp_csv = use_temp_csv
+    for amount, description in LIST_OF_ITEMS:
+        result = runner.invoke(add, [str(amount), description, f"--filename={temp_db}"])
+    assert result.output == "Dodano\n"
+
+    runner.invoke(import_csv, [temp_csv, f"--filename={temp_db}"])
+    with open(temp_db, "r") as stream:
+        db_content = json.load(stream)
+        print(f"{db_content}")
+        assert {'amount': "150.0", 'description': 'Test CSV 1', 'id': 4} in db_content
+        assert {'amount': "300.0", 'description': 'Test CSV 2', 'id': 5} in db_content    
+
+    cli_report = runner.invoke(report, ["--filename", temp_db])
+    printed_output = cli_report.output
+    print(f"{printed_output}")
+    assert "1" and "2" and "3" in printed_output
+    assert "987" and "456" and "789" in printed_output
+    assert "Chicken" and "Bananas" and "Pizza" in printed_output
+    assert "Chicken" and "Bananas" and "Pizza" in printed_output
+    assert "4" and "Test CSV 1" and "150" in printed_output
+
+    
+
+

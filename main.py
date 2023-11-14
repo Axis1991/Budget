@@ -87,7 +87,7 @@ def find_next_id(expense_list: list[Expense]):
 def read_db_or_init(filename=DB_FILENAME) -> list[Expense]:
     "Loads data from a database and returns empty list if database is not found."
     try:
-        with open(DB_FILENAME, "rb") as stream:
+        with open(filename, "rb") as stream:
             expense_list_data = json.load(stream)
             expense_list = [Expense(item["id"], float(item["amount"]), item["description"])
                 for item in expense_list_data]
@@ -126,28 +126,25 @@ def read_expenses(csv_file: str, expense_list: list[Expense]) -> list[Expense]:
         reader = csv.DictReader(stream)
         try:
             expenses_no_id = [create_Expense_item_from_dict(row) for row in reader]
-            expenses_csv = [
-                Expense(
-                    find_next_id(expense_list),
-                    float(expense.amount),
-                    expense.description,
-                )
-                for expense in expenses_no_id
-            ]
-            return expenses_csv
+            for expense in expenses_no_id:
+                expense_csv = Expense(
+                        id=find_next_id(expense_list),
+                        amount=str(float(expense.amount)),
+                        description=expense.description,
+                    )
+                expense_list.append(expense_csv)
+            return expense_list
         except ValueError as f:
             print(f"Błąd - {f.args[0]}")
             sys.exit(1)
 
 
-def add_csv_to_db(csv_file):
+def add_csv_to_db(csv_file, db_file=DB_FILENAME):
     # Tested manually, csv content successfully added to db.
     # Exceptions correctly raised for incorrect data format or missing columns with appropriate messages.
-    expense_list = read_db_or_init()
-    expenses_csv = read_expenses(csv_file, expense_list)
-    [expense_list.append(each) for each in expenses_csv]
-    save_db(expense_list)
-    return expense_list
+    expense_list = read_db_or_init(db_file)
+    expenses_list_updated = read_expenses(csv_file, expense_list)
+    save_db(expenses_list_updated, db_file)
 
 
 def strip_zeros(number: float) -> str:
@@ -189,13 +186,14 @@ def export_python():
 
 @clack.command
 @click.argument("csv_file")
-def import_csv(csv_file):
-    expense_list = add_csv_to_db(csv_file)
-    save_db(expense_list)
+@click.option("--filename", default=DB_FILENAME, help="Database filename")
+def import_csv(csv_file, filename=DB_FILENAME):
+    add_csv_to_db(csv_file, filename)
     print("Pomyślnie zaimportowano")
 
 
 @clack.command()
+@click.option("--filename", default=DB_FILENAME, help="Database filename")
 def report(filename=DB_FILENAME) -> None:
     expenses = read_db_or_init(filename)
     print_expenses(expenses)
@@ -204,6 +202,7 @@ def report(filename=DB_FILENAME) -> None:
 @clack.command()
 @click.argument("amount")
 @click.argument("description")
+@click.option("--filename", default=DB_FILENAME, help="Database filename")
 def add(amount: float, description: str, filename=DB_FILENAME) -> None:
 
     try:
@@ -217,7 +216,7 @@ def add(amount: float, description: str, filename=DB_FILENAME) -> None:
     except ValueError as e:
         print(f"Błąd - {e.args[0]}")
         sys.exit(1)
-    save_db(expense_list, filename=DB_FILENAME)
+    save_db(expense_list, filename=filename)
     print("Dodano")
    
 
