@@ -90,15 +90,15 @@ class TestFindID(unittest.TestCase):
 
 class TestReadDB(unittest.TestCase):
     """Tests the expected return value for database - existing or not"""
-    @patch("pickle.load")
+    @patch("json.load")
     @patch("builtins.open", new_callable=mock_open)
     def test_read_db_or_init_with_db(self, mock_file, mock_load):
-        mock_expenses = [Expense(id=1, amount=234.0, description="Zabawki")]
+        mock_expenses = [Expense(id=4, amount=150.0, description='Test CSV 1')]
         mock_load.return_value = mock_expenses
         got = read_db_or_init()
         self.assertEqual(got, mock_expenses)
 
-    @patch("pickle.load")
+    @patch("json.load")
     def test_read_db_or_init_no_db(self, mock_file):
         mock_file.side_effect = FileNotFoundError
         got = read_db_or_init()

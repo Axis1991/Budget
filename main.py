@@ -32,14 +32,6 @@ class Expense:
             raise ValueError("Koszt powinien być mniejszy od 10,000,000,000,000")
         if not self.description:
             raise ValueError("Opis nie może być pusty")
-        
-
-    def __eq__(self, other):
-        return (
-            self.id == other.id
-            and self.amount == other.amount
-            and self.description == other.description
-        )
 
     def __post_repr__(self):
         return f"Expense(id={self.id!r}, description={self.description!r}, amount={self.amount!r})"
@@ -114,7 +106,7 @@ def add_expense(expense_list: list[Expense], amount: float, description: str) ->
 
 def create_Expense_item_from_dict(row: dict[str, str]) -> [CSV_import]:
     try:
-        return CSV_import(description=row["description"].lstrip(), amount=(row["amount"]))
+        return CSV_import(description=row["description"], amount=(row["amount"]))
     except KeyError:
         print("Błąd pliku - akceptowalne pliki z kluczami 'amount' oraz 'description'")
         sys.exit(1)
@@ -129,7 +121,7 @@ def read_expenses(csv_file: str, expense_list: list[Expense]) -> list[Expense]:
             for expense in expenses_no_id:
                 expense_csv = Expense(
                         id=find_next_id(expense_list),
-                        amount=str(float(expense.amount)),
+                        amount=float(expense.amount),
                         description=expense.description,
                     )
                 expense_list.append(expense_csv)
@@ -180,8 +172,9 @@ def clack():
 
 
 @clack.command()
-def export_python():
-    expense_list = read_db_or_init()
+@click.option("--filename", default=DB_FILENAME, help="Database filename")
+def export_python(filename=DB_FILENAME):
+    expense_list = read_db_or_init(filename)
     print(repr(expense_list))
 
 @clack.command
