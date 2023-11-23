@@ -1,4 +1,9 @@
-# Budget test cases
+# Budget Test Smoke Suite.
+
+Test Suite consists of unit and functional tests.
+Unit tests are located in <code>test_exp_calc_unittest.py</code> file
+They are covering individual functions used by Click commands.
+Click commands are tests are located in <code>test_exp_calc_pytest.py</code>
 
 ### Unit tests
 ---
@@ -31,15 +36,13 @@ Expected result:
 ---
 
 #### **TC-05**
-
 Check if click command <code> export_python</code> correcty displays python repr to be reused in the future is working as expected:
 - test uses mock content to imitate returning content from database (function tested separately)
-
-
 
 Expected result: 
 - command is successfully executed with code 0
 - content is read correctly from mocked database
+
 
 #### **TC-06**
 Check if click command <code>import_csv</code> correcty imports csv files:
@@ -61,11 +64,4 @@ Expected result:
 - click module runs successfully using CliRunner 
 - with variable length of input, test checks relevant elements of the output
 
-
-
-
 <br>
-<br><br>
-<br><br><br><br><br>
-
-[Link example](http://allegro.pl)

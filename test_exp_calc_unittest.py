@@ -4,7 +4,7 @@ import sys
 import unittest
 from unittest.mock import patch, mock_open
 
-from main import (
+from expense_calculator import (
     add_expense,
     create_Expense_item_from_dict,
     find_next_id,
@@ -14,15 +14,7 @@ from main import (
     strip_zeros,
     CSV_import,
     Expense,
-    
 )
-
-    # def setUp(self) -> None:
-    #     return super().setUp()
-
-    # def tearDown(self) -> None:
-    #     return super().tearDown()
-
 
 class TestExpenseClass(unittest.TestCase):
     """Verifies if invalid data is handled correctly by the class"""
@@ -93,10 +85,12 @@ class TestReadDB(unittest.TestCase):
     @patch("json.load")
     @patch("builtins.open", new_callable=mock_open)
     def test_read_db_or_init_with_db(self, mock_file, mock_load):
-        mock_expenses = [Expense(id=4, amount=150.0, description='Test CSV 1')]
+        mock_expenses = [{"id": 4, "amount": 150.0, "description": 'Test CSV 1'}]
         mock_load.return_value = mock_expenses
         got = read_db_or_init()
-        self.assertEqual(got, mock_expenses)
+
+        expected = [Expense(id=item["id"], amount=item["amount"], description=item["description"]) for item in mock_expenses]
+        self.assertEqual(got, expected)
 
     @patch("json.load")
     def test_read_db_or_init_no_db(self, mock_file):
@@ -164,14 +158,12 @@ class TestCreateExpenseItemFromDict(unittest.TestCase):
 
 
 class TestReadExpenses(unittest.TestCase):
-    """ Tests reading data from db for easy path and invalid entries"""
-    @patch("main.create_Expense_item_from_dict", side_effect=create_Expense_item_from_dict)
-    @patch("main.find_next_id", side_effect=find_next_id)
+    @patch("expense_calculator.create_Expense_item_from_dict", side_effect=create_Expense_item_from_dict)
+    @patch("expense_calculator.find_next_id", side_effect=find_next_id)
     @patch("builtins.open", create=True)
     def test_valid_input(self, mock_open, mock_create_expense, mock_find_id):
         mock_open.return_value.__enter__.return_value = [
-            "amount,description","60,Pendrive","40,USB Cable"]
-        
+            "amount,description","60,Pendrive","40,USB Cable"]    
 
         expense_list = []
 
@@ -183,8 +175,8 @@ class TestReadExpenses(unittest.TestCase):
         self.assertEqual(expenses[0].amount, 60)
         self.assertEqual(expenses[0].description, "Pendrive")
 
-    @patch("main.create_Expense_item_from_dict", side_effect=create_Expense_item_from_dict)
-    @patch("main.find_next_id", side_effect=find_next_id)
+    @patch("expense_calculator.create_Expense_item_from_dict", side_effect=create_Expense_item_from_dict)
+    @patch("expense_calculator.find_next_id", side_effect=find_next_id)
     @patch("builtins.open", create=True)
     def test_invalid_input(self, mock_open, mock_create_expense, mock_find_id):
         mock_open.return_value.__enter__.return_value = ["amount,description", "Wrong data"]

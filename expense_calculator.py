@@ -1,7 +1,7 @@
 """
-Usage: M07L12_projekt.py <add (amount, description)> <report> <import-csv(csv path)> <export-python>
+Usage: expense_calculator.py <add (amount, description)> <report> <import-csv(csv path)> <export-python>
 
-Takes arguments to create or add to database budget.db and calculate the sum of expenses. 
+Takes arguments to create or add to database budget.json and calculate the sum of expenses. 
 It is possible to load expenses from csv file.
 <export-python> prints budget.db content in the form of a list to be possibly extended).
 """
@@ -9,12 +9,8 @@ It is possible to load expenses from csv file.
 import csv
 from dataclasses import dataclass
 import json
-import os
-import pickle
 import sys
-
 import click
-from click.testing import CliRunner
 
 DB_FILENAME = "budget.json"
 
@@ -104,7 +100,7 @@ def add_expense(expense_list: list[Expense], amount: float, description: str) ->
     expense_list.append(expense_item)
 
 
-def create_Expense_item_from_dict(row: dict[str, str]) -> [CSV_import]:
+def create_Expense_item_from_dict(row: dict[str, str]):
     try:
         return CSV_import(description=row["description"], amount=(row["amount"]))
     except KeyError:
@@ -112,9 +108,11 @@ def create_Expense_item_from_dict(row: dict[str, str]) -> [CSV_import]:
         sys.exit(1)
 
 
-def read_expenses(csv_file: str, expense_list: list[Expense]) -> list[Expense]:
-    """Reads expenses from a file and returns them as Expense class list of items"""
-    with open(csv_file, encoding="utf-8") as stream:
+def read_expenses(csv_file_path: str, expense_list: list[Expense]) -> list[Expense]:
+    """Reads expenses from a file and returns them as Expense class list of items
+    
+    """
+    with open(csv_file_path, encoding="utf-8") as stream:
         reader = csv.DictReader(stream)
         try:
             expenses_no_id = [create_Expense_item_from_dict(row) for row in reader]
@@ -177,7 +175,7 @@ def export_python(filename=DB_FILENAME):
     expense_list = read_db_or_init(filename)
     print(repr(expense_list))
 
-@clack.command
+@clack.command()
 @click.argument("csv_file")
 @click.option("--filename", default=DB_FILENAME, help="Database filename")
 def import_csv(csv_file, filename=DB_FILENAME):
@@ -214,6 +212,5 @@ def add(amount: float, description: str, filename=DB_FILENAME) -> None:
    
 
 if __name__ == "__main__":
-    # test_add_int()
     clack()
     
