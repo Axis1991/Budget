@@ -8,7 +8,7 @@ Click commands are tests are located in <code>test_exp_calc_pytest.py</code>
 ### Unit tests
 ---
 
-#### **TC-01**
+#### Expense class
 Check if validation of Expense class is working as expected:
 - number cannot be smaller than 0
 - big numbers should be handled gracefully - <br>
@@ -19,7 +19,7 @@ Expected result:
 - Validation works properly for values higher than 0 but low than 10bn
 - ValueErrors are raised for negative, too high or wrong format data as well as empty string as description
 
-#### **TC-02**
+#### Read_db_or_init
 Check if reading database is working as expected, then introduce an error to a file.
 
 Expected result:
@@ -35,7 +35,7 @@ Expected result:
 ### Functional tests
 ---
 
-#### **TC-05**
+#### **TC-01**
 Check if click command <code> export_python</code> correcty displays python repr to be reused in the future is working as expected:
 - test uses mock content to imitate returning content from database (function tested separately)
 
@@ -44,7 +44,7 @@ Expected result:
 - content is read correctly from mocked database
 
 
-#### **TC-06**
+#### **TC-02**
 Check if click command <code>import_csv</code> correcty imports csv files:
 - test uses temporary file and mock data
 - patch is used to imitate connection to database
@@ -55,7 +55,7 @@ Expected result:
 - success message is displayed correctly
 
 
-#### **TC-07**
+#### **TC-03**
 Check if click command <code>report</code> correcty imports csv files:
 - test used mock data
 - patch is used to imitate connection to database
