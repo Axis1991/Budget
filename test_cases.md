@@ -1,9 +1,9 @@
 # Budget Test Smoke Suite.
 
 Test Suite consists of unit and functional tests.
-Unit tests are located in <code>test_exp_calc_unittest.py</code> file
-They are covering individual functions used by Click commands.
-Click commands are tests are located in <code>test_exp_calc_pytest.py</code>
+Unit tests are located in <code>test_exp_calc_unittest.py</code> file.
+They cover individual functions used by Click commands.
+Click commands functional tests are located in <code>test_exp_calc_pytest.py</code>
 
 ### Unit tests
 ---
@@ -26,8 +26,7 @@ Expected result:
 - at first data should be loaded correctly
 - after introduction the error, data should not be loaded, user should get an error about not being able to retrieve errors from database
   
-.<br>
-.<br>
+
 .<br>
 .<br>
 .<br>
