@@ -40,11 +40,6 @@ def use_temp_db():
     yield filename_db
     os.remove(filename_db)
 
-# @pytest.fixture
-# def teardown_temp_db():
-#     yield
-#     os.remove("test_db.json")
-
 
 def test_import_csv_and_export_python(runner: CliRunner, use_temp_db: Literal['test_db.json'], use_temp_csv: Literal['temp.csv']):
     temp_csv = use_temp_csv
